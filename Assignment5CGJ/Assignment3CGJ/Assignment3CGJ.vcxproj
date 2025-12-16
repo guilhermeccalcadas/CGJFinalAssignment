@@ -25,7 +25,7 @@
     <ClCompile Include="..\libs\mgl\mglMesh.cpp" />
     <ClCompile Include="..\libs\mgl\mglSceneNode.cpp" />
     <ClCompile Include="..\libs\mgl\mglShader.cpp" />
-    <ClCompile Include="createPickagram3D.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="TangramPiece.cpp" />
   </ItemGroup>
   <ItemGroup>

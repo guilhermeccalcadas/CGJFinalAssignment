@@ -18,78 +18,79 @@
 
 class MyApp : public mgl::App {
 public:
-  void initCallback(GLFWwindow *win) override;
-  void displayCallback(GLFWwindow *win, double elapsed) override;
-  void windowSizeCallback(GLFWwindow *win, int width, int height) override;
-  void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods) override;
-  void scrollCallback(GLFWwindow *win, double xoffset, double yoffset) override;
-  void mouseButtonCallback(GLFWwindow* win, int button, int action, int mods) override;
-  void cursorCallback(GLFWwindow* window, double xpos, double ypos) override;
+    void initCallback(GLFWwindow* win) override;
+    void displayCallback(GLFWwindow* win, double elapsed) override;
+    void windowSizeCallback(GLFWwindow* win, int width, int height) override;
+    void keyCallback(GLFWwindow* win, int key, int scancode, int action, int mods) override;
+    void scrollCallback(GLFWwindow* win, double xoffset, double yoffset) override;
+    void mouseButtonCallback(GLFWwindow* win, int button, int action, int mods) override;
+    void cursorCallback(GLFWwindow* window, double xpos, double ypos) override;
 
 private:
-  // Camera control parameters
-  mgl::Camera* Camera = nullptr;
-  const float zoomSpeed = 1.0f;
-  const float minRadius = 2.0f;
-  const float maxRadius = 50.0f;
-  struct CameraInfo {
-      glm::mat4 viewMatrix;
-      glm::mat4 projectionMatrix;
-      glm::quat rotation;
-      float radius;
-      bool isOrtho;
-  };
-  CameraInfo cam1;
-  CameraInfo cam2;
-  CameraInfo* activeCam = nullptr;
-  glm::vec3 target = glm::vec3(0.0f, 0.5f, 0.0f);
+    // Camera control parameters
+    mgl::Camera* Camera = nullptr;
+    const float zoomSpeed = 1.0f;
+    const float minRadius = 2.0f;
+    const float maxRadius = 50.0f;
+    struct CameraInfo {
+        glm::mat4 viewMatrix;
+        glm::mat4 projectionMatrix;
+        glm::quat rotation;
+        float radius;
+        bool isOrtho;
+    };
+    CameraInfo cam1;
+    CameraInfo cam2;
+    CameraInfo* activeCam = nullptr;
+    glm::vec3 target = glm::vec3(0.0f, 0.5f, 0.0f);
 
-  // Mouse control parameters
-  bool rightMousePressed = false;
-  bool leftMousePressed = false;
-  float panSpeed = 0.01f;
-  double lastCameraPosX = 0.0f;
-  double lastCameraPosY = 0.0f;
-  float rotationSpeed = 0.006f;
-  float pitchLimit = glm::radians(89.0f);
+    // Mouse control parameters
+    bool rightMousePressed = false;
+    bool leftMousePressed = false;
+    float panSpeed = 0.01f;
+    double lastCameraPosX = 0.0f;
+    double lastCameraPosY = 0.0f;
+    float rotationSpeed = 0.006f;
+    float pitchLimit = glm::radians(89.0f);
 
-  // Shader program
-  const GLuint UBO_BP = 0;
-  mgl::ShaderProgram *Shaders = nullptr;
+    // Shader program
+    const GLuint UBO_BP = 0;
+    mgl::ShaderProgram* Shaders = nullptr;
 
-  // Model matrix uniform location
-  GLint ModelMatrixId;
+    // Model matrix uniform location
+    GLint ModelMatrixId;
 
-  // Meshes
-  std::vector<mgl::Mesh*> MeshesList;
+    // Meshes
+    std::vector<mgl::Mesh*> MeshesList;
+	mgl::Mesh* woodenSwordMesh = nullptr;
 
-  // Scene Graph
-  mgl::SceneNode* root = nullptr;
-  mgl::SceneNode* tableNode = nullptr;
-  std::vector<mgl::SceneNode*> nodes;
+    // Scene Graph
+    mgl::SceneNode* root = nullptr;
+    mgl::SceneNode* woodenSwordNode = nullptr;
+    std::vector<mgl::SceneNode*> nodes;
 
-  // Animation parameters
-  float t = 0.0f;
-  float animSpeed = 0.5f;
-  int animDirection = 0;
+    // Animation parameters
+    float t = 0.0f;
+    float animSpeed = 0.5f;
+    int animDirection = 0;
 
-  void createMeshes();
-  void createShaderPrograms();
-  void createCamera();
-  void drawScene();
-  void updateCamera();
-  glm::mat4 getModel(glm::vec3 pos, float rotX, float rotY, float rotZ, float scal);
-  void drawMesh(mgl::Mesh* m, glm::vec3 pos, float rotX, float rotY, float rotZ, float scal);
-  void createSceneGraph();
-  static void calculateProjection(CameraInfo& cam, int width, int height);
-  void updatePieceTransforms(float dt);
+    void createMeshes();
+    void createShaderPrograms();
+    void createCamera();
+    void drawScene();
+    void updateCamera();
+    glm::mat4 getModel(glm::vec3 pos, float rotX, float rotY, float rotZ, float scal);
+    void drawMesh(mgl::Mesh* m, glm::vec3 pos, float rotX, float rotY, float rotZ, float scal);
+    void createSceneGraph();
+    static void calculateProjection(CameraInfo& cam, int width, int height);
+    void updatePieceTransforms(float dt);
 };
 
 ///////////////////////////////////////////////////////////////////////// MESHES
 
 void MyApp::createMeshes() {
     std::string mesh_dir = "./assets/models/";
-
+    /*
     std::vector<std::string> files = {
         "Table.obj",
         "Triangle1.obj",
@@ -107,6 +108,11 @@ void MyApp::createMeshes() {
         m->create(mesh_dir + f);
         MeshesList.push_back(m);
     }
+    */
+
+    woodenSwordMesh = new mgl::Mesh();
+    woodenSwordMesh->joinIdenticalVertices();
+    woodenSwordMesh->create(mesh_dir + "wooden_sword.obj");
 }
 
 
@@ -118,15 +124,10 @@ void MyApp::createShaderPrograms() {
     Shaders->addShader(GL_FRAGMENT_SHADER, "cube-fs.glsl");
 
     Shaders->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
-    if (MeshesList[0]->hasNormals()) {
-        Shaders->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
-    }
-    if (MeshesList[0]->hasTexcoords()) {
-        Shaders->addAttribute(mgl::TEXCOORD_ATTRIBUTE, mgl::Mesh::TEXCOORD);
-    }
-    if (MeshesList[0]->hasTangentsAndBitangents()) {
-        Shaders->addAttribute(mgl::TANGENT_ATTRIBUTE, mgl::Mesh::TANGENT);
-    }
+    Shaders->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
+    Shaders->addAttribute(mgl::TEXCOORD_ATTRIBUTE, mgl::Mesh::TEXCOORD);
+    Shaders->addAttribute(mgl::TANGENT_ATTRIBUTE, mgl::Mesh::TANGENT);
+
 
     Shaders->addUniform(mgl::MODEL_MATRIX);
     Shaders->addUniform("uColor");
@@ -169,61 +170,66 @@ TransformationConfiguration squareConfig[7] = {
 
 void MyApp::createSceneGraph() {
     root = new mgl::SceneNode(nullptr, nullptr);
-
+    TangramPiece* woodenSword = new TangramPiece(woodenSwordMesh, glm::vec4(0.6f, 0.4f, 0.2f, 1.0f));
+    woodenSwordNode = new mgl::SceneNode(woodenSword, Shaders);
+    woodenSwordNode->transform = glm::mat4(1.0f);
+    root->addChild(woodenSwordNode);
+    /*
     // Mesa
     TangramPiece* tablePiece = new TangramPiece(MeshesList[0], glm::vec4(0.6f, 0.4f, 0.2f, 1.0f));
     tableNode = new mgl::SceneNode(tablePiece, Shaders);
     tableNode->transform = glm::mat4(1.0f);
     root->addChild(tableNode);
 
-    // Peça 0 - Triangle 1
+    // Pe?a 0 - Triangle 1
     TangramPiece* p0 = new TangramPiece(MeshesList[1], glm::vec4(0.9f, 0.1f, 0.1f, 1.0f));
     auto n0 = new mgl::SceneNode(p0, Shaders);
     n0->transform = getModel(squareConfig[0].pos, squareConfig[0].rotX, squareConfig[0].rotY, squareConfig[0].rotZ, 1.0f);
     tableNode->addChild(n0);
     nodes.push_back(n0);
 
-    // Peça 1 - Triangle 2
+    // Pe?a 1 - Triangle 2
     TangramPiece* p1 = new TangramPiece(MeshesList[2], glm::vec4(0.1f, 0.9f, 0.1f, 1.0f));
     auto n1 = new mgl::SceneNode(p1, Shaders);
     n1->transform = getModel(squareConfig[1].pos, squareConfig[1].rotX, squareConfig[1].rotY, squareConfig[1].rotZ, 1.0f);
     tableNode->addChild(n1);
     nodes.push_back(n1);
 
-    // Peça 2 - Triangle 4
+    // Pe?a 2 - Triangle 4
     TangramPiece* p2 = new TangramPiece(MeshesList[3], glm::vec4(0.1f, 0.1f, 0.9f, 1.0f));
     auto n2 = new mgl::SceneNode(p2, Shaders);
     n2->transform = getModel(squareConfig[2].pos, squareConfig[2].rotX, squareConfig[2].rotY, squareConfig[2].rotZ, 1.0f);
     tableNode->addChild(n2);
     nodes.push_back(n2);
 
-    // Peça 3 - Triangle 6
+    // Pe?a 3 - Triangle 6
     TangramPiece* p3 = new TangramPiece(MeshesList[4], glm::vec4(0.9f, 0.9f, 0.1f, 1.0f));
     auto n3 = new mgl::SceneNode(p3, Shaders);
     n3->transform = getModel(squareConfig[3].pos, squareConfig[3].rotX, squareConfig[3].rotY, squareConfig[3].rotZ, 1.0f);
     tableNode->addChild(n3);
     nodes.push_back(n3);
 
-    // Peça 4 - Triangle 7
+    // Pe?a 4 - Triangle 7
     TangramPiece* p4 = new TangramPiece(MeshesList[5], glm::vec4(0.9f, 0.1f, 0.9f, 1.0f));
     auto n4 = new mgl::SceneNode(p4, Shaders);
     n4->transform = getModel(squareConfig[4].pos, squareConfig[4].rotX, squareConfig[4].rotY, squareConfig[4].rotZ, 1.0f);
     tableNode->addChild(n4);
     nodes.push_back(n4);
 
-    // Peça 5 - Paralelogram
+    // Pe?a 5 - Paralelogram
     TangramPiece* p5 = new TangramPiece(MeshesList[6], glm::vec4(0.1f, 0.9f, 0.9f, 1.0f));
     auto n5 = new mgl::SceneNode(p5, Shaders);
     n5->transform = getModel(squareConfig[5].pos, squareConfig[5].rotX, squareConfig[5].rotY, squareConfig[5].rotZ, 1.0f);
     tableNode->addChild(n5);
     nodes.push_back(n5);
 
-    // Peça 7 - Quadrado
+    // Pe?a 7 - Quadrado
     TangramPiece* p7 = new TangramPiece(MeshesList[7], glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
     auto n7 = new mgl::SceneNode(p7, Shaders);
     n7->transform = getModel(squareConfig[6].pos, squareConfig[6].rotX, squareConfig[6].rotY, squareConfig[6].rotZ, 1.0f);
     tableNode->addChild(n7);
     nodes.push_back(n7);
+    */
 }
 
 ///////////////////////////////////////////////////////////////////////// CAMERA
@@ -327,11 +333,11 @@ void MyApp::updatePieceTransforms(float dt) {
 
 ////////////////////////////////////////////////////////////////////// CALLBACKS
 
-void MyApp::initCallback(GLFWwindow *win) {
-  createMeshes();
-  createShaderPrograms();
-  createCamera();
-  createSceneGraph();
+void MyApp::initCallback(GLFWwindow* win) {
+    createMeshes();
+    createShaderPrograms();
+    createCamera();
+    createSceneGraph();
 }
 
 void MyApp::windowSizeCallback(GLFWwindow* win, int width, int height) {
@@ -343,9 +349,9 @@ void MyApp::windowSizeCallback(GLFWwindow* win, int width, int height) {
     }
 }
 
-void MyApp::displayCallback(GLFWwindow *win, double elapsed) { 
+void MyApp::displayCallback(GLFWwindow* win, double elapsed) {
     updatePieceTransforms(elapsed);
-    drawScene(); 
+    drawScene();
 }
 
 void MyApp::keyCallback(GLFWwindow* win, int key, int scancode, int action, int mods) {
@@ -445,29 +451,20 @@ void MyApp::cursorCallback(GLFWwindow* window, double xpos, double ypos) {
 
         updateCamera();
     }
-
-    else if (leftMousePressed) {
-        glm::vec3 camRight = activeCam->rotation * glm::vec3(1.0f, 0.0f, 0.0f);
-        glm::vec3 camFront = activeCam->rotation * glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec3 translation = (camRight * (float)distanceX * panSpeed) +
-            (camFront * (float)-distanceY * panSpeed);
-
-        tableNode->transform = glm::translate(glm::mat4(1.0f), translation) * tableNode->transform;
-    }
     lastCameraPosX = xpos;
     lastCameraPosY = ypos;
 }
 
 /////////////////////////////////////////////////////////////////////////// MAIN
 
-int main(int argc, char *argv[]) {
-  mgl::Engine &engine = mgl::Engine::getInstance();
-  engine.setApp(new MyApp());
-  engine.setOpenGL(4, 6);
-  engine.setWindow(800, 600, "Create Pickagram 3D", 0, 1);
-  engine.init();
-  engine.run();
-  exit(EXIT_SUCCESS);
+int main(int argc, char* argv[]) {
+    mgl::Engine& engine = mgl::Engine::getInstance();
+    engine.setApp(new MyApp());
+    engine.setOpenGL(4, 6);
+    engine.setWindow(800, 600, "Create Pickagram 3D", 0, 1);
+    engine.init();
+    engine.run();
+    exit(EXIT_SUCCESS);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

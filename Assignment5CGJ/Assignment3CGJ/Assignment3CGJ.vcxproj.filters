@@ -27,7 +27,7 @@
     <ClCompile Include="..\libs\mgl\mglShader.cpp">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
-    <ClCompile Include="createPickagram3D.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
     <ClCompile Include="..\libs\mgl\mglMesh.cpp">
