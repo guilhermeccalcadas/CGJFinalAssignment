@@ -29,8 +29,8 @@
     <ClCompile Include="TangramPiece.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cube-fs.glsl" />
-    <None Include="cube-vs.glsl" />
+    <None Include="a5-fs.glsl" />
+    <None Include="a5-vs.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

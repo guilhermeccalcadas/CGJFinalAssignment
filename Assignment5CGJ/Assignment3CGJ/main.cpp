@@ -58,6 +58,8 @@ private:
 
     // Model matrix uniform location
     GLint ModelMatrixId;
+    GLint LightPosId;
+    GLint ViewPosId;
 
     // Meshes
     std::vector<mgl::Mesh*> MeshesList;
@@ -130,8 +132,8 @@ void MyApp::createMeshes() {
 
 void MyApp::createShaderPrograms() {
     Shaders = new mgl::ShaderProgram();
-    Shaders->addShader(GL_VERTEX_SHADER, "cube-vs.glsl");
-    Shaders->addShader(GL_FRAGMENT_SHADER, "cube-fs.glsl");
+    Shaders->addShader(GL_VERTEX_SHADER, "a5-vs.glsl");
+    Shaders->addShader(GL_FRAGMENT_SHADER, "a5-fs.glsl");
 
     Shaders->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
     Shaders->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
@@ -141,25 +143,35 @@ void MyApp::createShaderPrograms() {
 
     Shaders->addUniform(mgl::MODEL_MATRIX);
     Shaders->addUniform("uColor");
+    Shaders->addUniform("uLightPos");
+    Shaders->addUniform("uViewPos");
     Shaders->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
 
     Shaders->create();
 
     ModelMatrixId = Shaders->Uniforms[mgl::MODEL_MATRIX].index;
+    LightPosId = Shaders->Uniforms["uLightPos"].index;
+    ViewPosId = Shaders->Uniforms["uViewPos"].index;
 }
 
 
 void MyApp::createSceneGraph() {
     root = new mgl::SceneNode(nullptr, nullptr);
 
+
+
     TangramPiece* pedestal = new TangramPiece(pedestalMesh, glm::vec4(0.6f, 0.4f, 0.2f, 1.0f));
     pedestalNode = new mgl::SceneNode(pedestal, Shaders);
     pedestalNode->transform = glm::mat4(1.0f);
+    pedestalNode->transform[3] = glm::vec4(5.0f, 1.0f, 3.0f, 1.0f);
     root->addChild(pedestalNode);
 
     TangramPiece* woodenSword = new TangramPiece(woodenSwordMesh, glm::vec4(0.2f, 0.4f, 0.8f, 1.0f));
     woodenSwordNode = new mgl::SceneNode(woodenSword, Shaders);
-    woodenSwordNode->transform = glm::mat4(1.0f);
+    glm::mat4 m = glm::mat4(1.0f);
+    //m = glm::translate(m, glm::vec3(0.0f, 10.0f, 0.0f));
+    //m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    woodenSwordNode->transform = m;
     pedestalNode->addChild(woodenSwordNode);
 
     TangramPiece* candle = new TangramPiece(candleMesh, glm::vec4(0.1f, 0.5f, 0.2f, 1.0f));
@@ -210,6 +222,29 @@ void MyApp::drawMesh(mgl::Mesh* m, glm::vec3 pos, float rotX, float rotY, float 
 }
 
 void MyApp::drawScene() {
+    // 1. Enviar Posição da Câmera (Necessário para o brilho especular)
+    // A posição da camera depende se estamos a usar a cam1 e o raio dela
+    glm::vec3 camPos;
+    if (activeCam) {
+        // Recalcular a posição exata da câmera baseada na rotação atual
+        glm::vec3 initialPos(0.0f, 0.0f, activeCam->radius);
+        camPos = activeCam->rotation * initialPos + target; // +target se a cam estiver a orbitar algo
+    }
+    glUniform3fv(ViewPosId, 1, glm::value_ptr(camPos));
+
+    // 2. Enviar Posição da Luz (Chama da Vela)
+    // Assumindo que a vela está em 'candleNode'
+    // Vamos pegar na posição do nó da vela e somar um valor em Y (altura da chama)
+
+    // Se o candleNode tiver uma matriz de transformação, usamos a posição dela (coluna 3)
+    glm::vec3 candlePos = glm::vec3(candleNode->transform[3]);
+
+    // Ajuste da altura da chama (ajusta o 1.5f conforme o tamanho do teu modelo)
+    glm::vec3 flamePos = candlePos + glm::vec3(0.0f, 10.0f, 0.0f);
+
+    glUniform3fv(LightPosId, 1, glm::value_ptr(flamePos));
+
+    // 3. Desenhar
     root->draw();
 }
 

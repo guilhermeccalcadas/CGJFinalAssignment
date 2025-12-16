@@ -41,10 +41,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="cube-fs.glsl">
+    <None Include="a5-fs.glsl">
       <Filter>Arquivos de Origem</Filter>
     </None>
-    <None Include="cube-vs.glsl">
+    <None Include="a5-vs.glsl">
       <Filter>Arquivos de Origem</Filter>
     </None>
   </ItemGroup>
