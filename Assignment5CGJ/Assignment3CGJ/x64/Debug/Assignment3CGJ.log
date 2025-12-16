@@ -1,0 +1,6 @@
+﻿  createPickagram3D.cpp
+C:\Users\Guilherme Calçadas\source\repos\Assignment2CGJ\Assignment2CGJ\Assignment3CGJ\createPickagram3D.cpp(347,27): warning C4244: 'argumento': conversão de 'double' para 'float', possível perda de dados
+C:\Users\Guilherme Calçadas\source\repos\Assignment2CGJ\Assignment2CGJ\Assignment3CGJ\createPickagram3D.cpp(393,38): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
+C:\Users\Guilherme Calçadas\source\repos\Assignment2CGJ\Assignment2CGJ\Assignment3CGJ\createPickagram3D.cpp(435,24): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
+C:\Users\Guilherme Calçadas\source\repos\Assignment2CGJ\Assignment2CGJ\Assignment3CGJ\createPickagram3D.cpp(436,26): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
+  Assignment3CGJ.vcxproj -> C:\Users\Guilherme Calçadas\source\repos\Assignment2CGJ\Assignment2CGJ\x64\Debug\Assignment3CGJ.exe
