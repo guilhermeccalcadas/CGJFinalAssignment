@@ -1,6 +1,6 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(538,5): warning MSB8028: O diretório intermediário (x64\Debug\) contém arquivos compartilhados de outro projeto (Assignment3CGJ.vcxproj). Isso pode levar a um comportamento incorreto de limpeza e recompilação.
   main.cpp
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(319,38): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(361,24): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(362,26): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
+D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(316,38): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
+D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(358,24): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
+D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(359,26): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
   Assignment3CGJ.vcxproj -> D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\x64\Debug\Assignment5.exe
