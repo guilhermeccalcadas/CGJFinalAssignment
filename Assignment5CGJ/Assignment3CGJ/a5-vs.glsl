@@ -1,30 +1,34 @@
 #version 330 core
 
-layout(location = 1) in vec3 inPosition;
-layout(location = 2) in vec3 inNormal;
-layout(location = 3) in vec2 inTexcoord;
+// Inputs que vêm do C++
+in vec3 inPosition;
+in vec3 inNormal;
+in vec2 inTexcoord;
 
-out vec3 exPosition;
+// Outputs para o Fragment Shader
+out vec3 exPosition;      // Posição no Mundo (para a LUZ)
+out vec3 exLocalPosition; // <--- NOVO: Posição Local (para a TEXTURA/NOISE)
 out vec3 exNormal;
 out vec2 exTexcoord;
 
+// Uniforms
 uniform mat4 ModelMatrix;
 
-uniform Camera {
+layout(std140) uniform Camera {
     mat4 ViewMatrix;
     mat4 ProjectionMatrix;
 };
 
 void main(void)
 {
+    exLocalPosition = inPosition; 
 
     exPosition = vec3(ModelMatrix * vec4(inPosition, 1.0));
-
-
-    exNormal = mat3(transpose(inverse(ModelMatrix))) * inNormal;
+    
+    mat3 NormalMatrix = transpose(inverse(mat3(ModelMatrix)));
+    exNormal = NormalMatrix * inNormal;
 
     exTexcoord = inTexcoord;
-
 
     gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(inPosition, 1.0);
 }
