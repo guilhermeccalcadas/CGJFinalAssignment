@@ -12,6 +12,7 @@
 #include "../mgl/mgl.hpp"
 #include "../mgl/mglSceneNode.hpp"
 #include <iostream>
+#include <SceneObject.hpp>
 
 
 ////////////////////////////////////////////////////////////////////////// MYAPP
@@ -67,6 +68,10 @@ private:
 	mgl::Mesh* woodenSwordMesh = nullptr;
     mgl::Mesh* candleMesh = nullptr;
     mgl::Mesh* pedestalMesh = nullptr;
+
+    GLuint texMadeiraID;
+    GLuint texMarmoreID;
+    GLuint texVelaID;
 
     // Scene Graph
     mgl::SceneNode* root = nullptr;
@@ -170,25 +175,29 @@ void MyApp::createShaderPrograms() {
 void MyApp::createSceneGraph() {
     root = new mgl::SceneNode(nullptr, nullptr);
 
-
-
-    TangramPiece* pedestal = new TangramPiece(pedestalMesh, glm::vec4(0.6f, 0.4f, 0.2f, 1.0f));
+    // --- 1. PEDESTAL (Mármore - ID 2) ---
+    // Cor escura para os veios (0.2), ID 2
+    SceneObject* pedestal = new SceneObject(pedestalMesh, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f), texMarmoreID, 2);
     pedestalNode = new mgl::SceneNode(pedestal, Shaders);
     pedestalNode->transform = glm::mat4(1.0f);
     pedestalNode->transform[3] = glm::vec4(5.0f, 1.0f, 3.0f, 1.0f);
     root->addChild(pedestalNode);
-    
-    TangramPiece* woodenSword = new TangramPiece(woodenSwordMesh, glm::vec4(0.2f, 0.4f, 0.8f, 1.0f));
+
+    // --- 2. ESPADA (Madeira - ID 1) ---
+    // [CORREÇÃO]: Mudei o último número de 2 para 1
+    SceneObject* woodenSword = new SceneObject(woodenSwordMesh, glm::vec4(0.60f, 0.35f, 0.15f, 1.0f), texMadeiraID, 1);
     woodenSwordNode = new mgl::SceneNode(woodenSword, Shaders);
     glm::mat4 m = glm::mat4(1.0f);
     m = glm::translate(m, glm::vec3(0.0f, 10.0f, 0.0f));
     m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     woodenSwordNode->setTransform(m);
     pedestalNode->addChild(woodenSwordNode);
-    
-    TangramPiece* candle = new TangramPiece(candleMesh, glm::vec4(0.1f, 0.5f, 0.2f, 1.0f));
+
+    // --- 3. VELA (Cera - ID 3) ---
+    // [CORREÇÃO]: Mudei o último número de 2 para 3
+    SceneObject* candle = new SceneObject(candleMesh, glm::vec4(0.92f, 0.88f, 0.70f, 1.0f), texVelaID, 3);
     candleNode = new mgl::SceneNode(candle, Shaders);
-	candleNode->setTransform(glm::mat4(1.0f));
+    candleNode->setTransform(glm::mat4(1.0f));
     root->addChild(candleNode);
 }
 
@@ -249,7 +258,7 @@ void MyApp::drawScene() {
 
 
     glUniform3fv(LightPosId, 1, glm::value_ptr(globalFlamePos));
-    glUniform3f(LightColorId, 1.0f, 0.9f, 0.6f);
+    glUniform3f(LightColorId, 0.9f, 0.9f, 0.9f);
 
     root->draw();
 }
@@ -321,6 +330,102 @@ int MyApp::pickObject(GLFWwindow* win, double mouseX, double mouseY) {
     return index;
 }
 
+// 1. GERADOR DE MADEIRA (Gera riscas/fibras verticais)
+GLuint createWoodTexture(int seed) {
+    srand(seed);
+    const int WIDTH = 128;
+    const int HEIGHT = 128;
+    unsigned char data[WIDTH * HEIGHT * 4];
+
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            // Truque: O valor muda muito no X (largura), mas pouco no Y (altura)
+            // Isso cria o efeito de "fibras" longas
+            float scaleX = 0.5f;
+            float scaleY = 0.05f; // Esticado verticalmente
+
+            // Simulação simples de perlin noise no CPU
+            int noiseVal = rand() % 255;
+
+            // Mas vamos aldrabar: riscas verticais misturadas com noise
+            // (x * 10) cria o padrão de repetição de tábuas
+            int stripPattern = (int)(abs(sin(x * 0.2f)) * 255);
+
+            // Mistura o padrão de riscas com o ruído
+            unsigned char finalVal = (unsigned char)((stripPattern * 0.7) + (noiseVal * 0.3));
+
+            data[(y * WIDTH + x) * 4 + 0] = finalVal;
+            data[(y * WIDTH + x) * 4 + 1] = finalVal;
+            data[(y * WIDTH + x) * 4 + 2] = finalVal;
+            data[(y * WIDTH + x) * 4 + 3] = 255;
+        }
+    }
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texID;
+}
+
+// 2. GERADOR DE MÁRMORE (Nuvens suaves, clássico)
+GLuint createMarbleTexture(int seed) {
+    srand(seed);
+    const int SIZE = 64; // Menor para ficar mais "borrado" (suave)
+    unsigned char data[SIZE * SIZE * 4];
+
+    for (int i = 0; i < SIZE * SIZE; i++) {
+        unsigned char val = rand() % 255;
+        data[i * 4 + 0] = val;
+        data[i * 4 + 1] = val;
+        data[i * 4 + 2] = val;
+        data[i * 4 + 3] = 255;
+    }
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE, SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // OBRIGATÓRIO PARA MÁRMORE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texID;
+}
+
+// 3. GERADOR DE VELA (Grão muito fino)
+GLuint createCandleTexture(int seed) {
+    srand(seed);
+    const int SIZE = 256; // Maior resolução para grão fino
+    unsigned char data[SIZE * SIZE * 4];
+
+    for (int i = 0; i < SIZE * SIZE; i++) {
+        // Ruído subtil (entre 200 e 255) para não ter pontos pretos
+        unsigned char val = 200 + (rand() % 55);
+        data[i * 4 + 0] = val;
+        data[i * 4 + 1] = val;
+        data[i * 4 + 2] = val;
+        data[i * 4 + 3] = 255;
+    }
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE, SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return texID;
+}
+
 
 ////////////////////////////////////////////////////////////////////// CALLBACKS
 
@@ -328,6 +433,9 @@ void MyApp::initCallback(GLFWwindow* win) {
     createMeshes();
     createShaderPrograms();
     createCamera();
+    texMadeiraID = createWoodTexture(100);    // Gera fibras
+    texMarmoreID = createMarbleTexture(200);  // Gera nuvens
+    texVelaID = createCandleTexture(300);  // Gera grão fino
     createSceneGraph();
 }
 
