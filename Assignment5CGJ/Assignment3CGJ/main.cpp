@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Loading meshes from external files
 //
-// Copyright (c) 2023-25 by Carlos Martinho
 //
-// INTRODUCES:
-// MODEL DATA, ASSIMP, mglMesh.hpp
+//
+//
+//
+//
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,6 +68,7 @@ private:
 	mgl::Mesh* woodenSwordMesh = nullptr;
     mgl::Mesh* candleMesh = nullptr;
     mgl::Mesh* pedestalMesh = nullptr;
+	mgl::Mesh* mirrorMesh = nullptr;
 
     GLuint texMadeiraID;
     GLuint texMarmoreID;
@@ -78,6 +79,7 @@ private:
     mgl::SceneNode* woodenSwordNode = nullptr;
     mgl::SceneNode* candleNode = nullptr;
     mgl::SceneNode* pedestalNode = nullptr;
+    mgl::SceneNode* mirrorNode = nullptr;
     std::vector<mgl::SceneNode*> nodes;
 
     // Modos de Edição
@@ -98,8 +100,6 @@ private:
     void createCamera();
     void drawScene();
     void updateCamera();
-    glm::mat4 getModel(glm::vec3 pos, float rotX, float rotY, float rotZ, float scal);
-    void drawMesh(mgl::Mesh* m, glm::vec3 pos, float rotX, float rotY, float rotZ, float scal);
     void createSceneGraph();
     static void calculateProjection(CameraInfo& cam, int width, int height);
     int pickObject(GLFWwindow* win, double mouseX, double mouseY);
@@ -109,25 +109,6 @@ private:
 
 void MyApp::createMeshes() {
     std::string mesh_dir = "./assets/models/";
-    /*
-    std::vector<std::string> files = {
-        "Table.obj",
-        "Triangle1.obj",
-        "Triangle2.obj",
-        "Triangle4.obj",
-        "Triangle6.obj",
-        "Triangle7.obj",
-        "Paralelogram3a.obj",
-        "Cube5.obj"
-    };
-
-    for (const auto& f : files) {
-        mgl::Mesh* m = new mgl::Mesh();
-        m->joinIdenticalVertices();
-        m->create(mesh_dir + f);
-        MeshesList.push_back(m);
-    }
-    */
 
     woodenSwordMesh = new mgl::Mesh();
     woodenSwordMesh->joinIdenticalVertices();
@@ -140,6 +121,10 @@ void MyApp::createMeshes() {
     pedestalMesh = new mgl::Mesh();
     pedestalMesh->joinIdenticalVertices();
     pedestalMesh->create(mesh_dir + "pedestal.obj");
+
+    mirrorMesh = new mgl::Mesh();
+    mirrorMesh->joinIdenticalVertices();
+    mirrorMesh->create(mesh_dir + "mirror.obj");
 }
 
 
@@ -169,165 +154,6 @@ void MyApp::createShaderPrograms() {
     LightPosId = Shaders->Uniforms["uLightPos"].index;
     ViewPosId = Shaders->Uniforms["uViewPos"].index;
     LightColorId = Shaders->Uniforms["uLightColor"].index;
-}
-
-
-void MyApp::createSceneGraph() {
-    root = new mgl::SceneNode(nullptr, nullptr);
-
-    // --- 1. PEDESTAL (Mármore - ID 2) ---
-    // Cor escura para os veios (0.2), ID 2
-    SceneObject* pedestal = new SceneObject(pedestalMesh, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f), texMarmoreID, 2);
-    pedestalNode = new mgl::SceneNode(pedestal, Shaders);
-    pedestalNode->transform = glm::mat4(1.0f);
-    pedestalNode->transform[3] = glm::vec4(5.0f, 1.0f, 3.0f, 1.0f);
-    root->addChild(pedestalNode);
-
-    // --- 2. ESPADA (Madeira - ID 1) ---
-    // [CORREÇÃO]: Mudei o último número de 2 para 1
-    SceneObject* woodenSword = new SceneObject(woodenSwordMesh, glm::vec4(0.60f, 0.35f, 0.15f, 1.0f), texMadeiraID, 1);
-    woodenSwordNode = new mgl::SceneNode(woodenSword, Shaders);
-    glm::mat4 m = glm::mat4(1.0f);
-    m = glm::translate(m, glm::vec3(0.0f, 10.0f, 0.0f));
-    m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    woodenSwordNode->setTransform(m);
-    pedestalNode->addChild(woodenSwordNode);
-
-    // --- 3. VELA (Cera - ID 3) ---
-    // [CORREÇÃO]: Mudei o último número de 2 para 3
-    SceneObject* candle = new SceneObject(candleMesh, glm::vec4(0.92f, 0.88f, 0.70f, 1.0f), texVelaID, 3);
-    candleNode = new mgl::SceneNode(candle, Shaders);
-    candleNode->setTransform(glm::mat4(1.0f));
-    root->addChild(candleNode);
-}
-
-///////////////////////////////////////////////////////////////////////// CAMERA
-
-
-void MyApp::createCamera() {
-    Camera = new mgl::Camera(UBO_BP);
-
-    // --- SETUP CAM 1 ---
-    glm::vec3 eye1(0.0f, 10.0f, 0.0f);
-    glm::vec3 up1(0.0f, 0.0f, -1.0f);
-
-    cam1.radius = glm::length(eye1 - target);
-    cam1.rotation = glm::quatLookAt(glm::normalize(target - eye1), up1);
-    cam1.viewMatrix = glm::lookAt(eye1, target, up1);
-    cam1.isOrtho = false;
-
-    calculateProjection(cam1, 800, 600);
-    activeCam = &cam1;
-    Camera->setViewMatrix(activeCam->viewMatrix);
-    Camera->setProjectionMatrix(activeCam->projectionMatrix);
-}
-
-
-/////////////////////////////////////////////////////////////////////////// DRAW
-
-glm::mat4 ModelMatrix;
-
-glm::mat4 MyApp::getModel(glm::vec3 pos, float rotX, float rotY, float rotZ, float scal) {
-    glm::mat4 M = glm::translate(glm::mat4(1.0f), pos)
-        * glm::rotate(glm::mat4(1.0f), glm::radians(rotX), glm::vec3(1, 0, 0))
-        * glm::rotate(glm::mat4(1.0f), glm::radians(rotY), glm::vec3(0, 1, 0))
-        * glm::rotate(glm::mat4(1.0f), glm::radians(rotZ), glm::vec3(0, 0, 1))
-        * glm::scale(glm::mat4(1.0f), glm::vec3(scal, scal, 1.0f));
-    return M;
-}
-
-void MyApp::drawMesh(mgl::Mesh* m, glm::vec3 pos, float rotX, float rotY, float rotZ, float scal) {
-    ModelMatrix = getModel(pos, rotX, rotY, rotZ, scal);
-    glUniformMatrix4fv(ModelMatrixId, 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-    m->draw();
-}
-
-void MyApp::drawScene() {
-    Shaders->bind();
-
-    glm::vec3 camPos;
-    if (activeCam) {
-
-        glm::vec3 initialPos(0.0f, 0.0f, activeCam->radius);
-        camPos = activeCam->rotation * initialPos + target;
-    }
-    glUniform3fv(ViewPosId, 1, glm::value_ptr(camPos));
-
-    glm::vec4 localFlamePos = glm::vec4(0.0f, 0.75f, 0.0f, 1.0f);
-    glm::vec3 globalFlamePos = glm::vec3(candleNode->getTransform() * localFlamePos);
-
-
-    glUniform3fv(LightPosId, 1, glm::value_ptr(globalFlamePos));
-    glUniform3f(LightColorId, 0.9f, 0.9f, 0.9f);
-
-    root->draw();
-}
-
-/////////////////////////////////////////////////////////////////////////// Auxiliary Methods
-
-void MyApp::updateCamera() {
-    glm::vec3 initialPos(0.0f, 0.0f, activeCam->radius);
-    glm::vec3 rotatedPos = activeCam->rotation * initialPos;
-    glm::vec3 localUp = activeCam->rotation * glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::mat4 view = glm::lookAt(rotatedPos + target, target, glm::normalize(localUp));
-    activeCam->viewMatrix = view;
-
-    Camera->setViewMatrix(activeCam->viewMatrix);
-}
-
-void MyApp::calculateProjection(CameraInfo& cam, int width, int height) {
-    float aspect = (float)width / (float)height;
-    if (height == 0) aspect = 1.0f;
-
-    if (cam.isOrtho) {
-        float orthoSize = 2.0f;
-        cam.projectionMatrix = glm::ortho(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, 1.0f, 50.0f);
-    }
-    else {
-        cam.projectionMatrix = glm::perspective(glm::radians(30.0f), aspect, 1.0f, 50.0f);
-    }
-}
-
-// Devolve: 0 (Nada), 1 (Vela), 2 (Pedestal)
-// Devolve: 0 (Nada), 1 (Vela), 2 (Pedestal)
-int MyApp::pickObject(GLFWwindow* win, double mouseX, double mouseY) {
-    // 1. Limpar Buffers (incluindo o Stencil!)
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    // 2. Ativar Stencil e Configurar
-    glEnable(GL_STENCIL_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-    // Precisamos do shader ativo
-    Shaders->bind();
-
-    // IMPORTANTE: Se o shader precisar da ViewMatrix atualizada, 
-    // garante que a câmara enviou os dados (normalmente o updateCamera trata disso).
-
-    // --- DESENHAR VELA (ID 1) ---
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
-    if (candleNode) candleNode->draw();
-
-    // --- DESENHAR PEDESTAL (ID 2) ---
-    glStencilFunc(GL_ALWAYS, 2, 0xFF);
-    if (pedestalNode) pedestalNode->draw();
-
-    // 3. Ler o ID no pixel do rato
-    int width, height;
-    glfwGetWindowSize(win, &width, &height); // Usa o 'win' que recebemos
-
-    int x = (int)mouseX;
-    int y = height - (int)mouseY; // Inverter Y
-
-    unsigned int index = 0;
-    glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
-
-    // 4. Limpar
-    glDisable(GL_STENCIL_TEST);
-
-    return index;
 }
 
 // 1. GERADOR DE MADEIRA (Gera riscas/fibras verticais)
@@ -427,15 +253,252 @@ GLuint createCandleTexture(int seed) {
 }
 
 
+void MyApp::createSceneGraph() {
+    texMadeiraID = createWoodTexture(rand());
+    texMarmoreID = createMarbleTexture(rand());
+    texVelaID = createCandleTexture(rand());
+
+    root = new mgl::SceneNode(nullptr, nullptr);
+
+    // --- 1. PEDESTAL (Mármore - ID 2) ---
+    SceneObject* pedestal = new SceneObject(pedestalMesh, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f), texMarmoreID, 2);
+    pedestalNode = new mgl::SceneNode(pedestal, Shaders);
+    pedestalNode->transform = glm::mat4(1.0f);
+    pedestalNode->transform[3] = glm::vec4(5.0f, 0.0f, 0.0f, 1.0f);
+    root->addChild(pedestalNode);
+
+    // --- 2. ESPADA (Madeira - ID 1) ---
+    SceneObject* woodenSword = new SceneObject(woodenSwordMesh, glm::vec4(0.60f, 0.35f, 0.15f, 1.0f), texMadeiraID, 1);
+    woodenSwordNode = new mgl::SceneNode(woodenSword, Shaders);
+    glm::mat4 m = glm::mat4(1.0f);
+    m = glm::translate(m, glm::vec3(0.0f, 10.0f, 0.0f));
+    m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    woodenSwordNode->setTransform(m);
+    pedestalNode->addChild(woodenSwordNode);
+
+    // --- 3. VELA (Cera - ID 3) ---
+    SceneObject* candle = new SceneObject(candleMesh, glm::vec4(0.92f, 0.88f, 0.70f, 1.0f), texVelaID, 3);
+    candleNode = new mgl::SceneNode(candle, Shaders);
+    candleNode->setTransform(glm::mat4(1.0f));
+    root->addChild(candleNode);
+
+// --- 4. ESPELHO ---
+    // Alpha 0.3 para ser transparente
+    SceneObject* mirror = new SceneObject(mirrorMesh, glm::vec4(0.5f, 0.5f, 0.6f, 0.3f), 0, 0); 
+    mirrorNode = new mgl::SceneNode(mirror, Shaders);
+    
+    // [CORREÇÃO] Usar mat4(1.0f) limpa, não usar 'm'!
+    // Altura 2.05 para ficar no topo do pedestal
+    glm::mat4 mirrorTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.66f, 0.0f)); 
+    mirrorNode->setTransform(mirrorTransform);
+    
+    // NÃO ADICIONAR À ROOT! (Isto está correto, mantém comentado)
+    // root->addChild(mirrorNode);
+}
+
+///////////////////////////////////////////////////////////////////////// CAMERA
+
+
+void MyApp::createCamera() {
+    Camera = new mgl::Camera(UBO_BP);
+
+    glm::vec3 eye1(0.0f, 10.0f, 0.0f);
+    glm::vec3 up1(0.0f, 0.0f, -1.0f);
+
+    cam1.radius = glm::length(eye1 - target);
+    cam1.rotation = glm::quatLookAt(glm::normalize(target - eye1), up1);
+    cam1.viewMatrix = glm::lookAt(eye1, target, up1);
+    cam1.isOrtho = false;
+
+    calculateProjection(cam1, 800, 600);
+    activeCam = &cam1;
+    Camera->setViewMatrix(activeCam->viewMatrix);
+    Camera->setProjectionMatrix(activeCam->projectionMatrix);
+}
+
+
+/////////////////////////////////////////////////////////////////////////// DRAW
+
+void MyApp::drawScene() {
+    Shaders->bind();
+
+    // --- UNIFORMS ---
+    glm::vec3 camPos;
+    if (activeCam) {
+        glm::vec3 initialPos(0.0f, 0.0f, activeCam->radius);
+        camPos = activeCam->rotation * initialPos + target;
+    }
+    glUniform3fv(ViewPosId, 1, glm::value_ptr(camPos));
+
+    glm::vec4 localFlamePos = glm::vec4(0.0f, 0.75f, 0.0f, 1.0f);
+    glm::vec3 globalFlamePos = glm::vec3(candleNode->getTransform() * localFlamePos);
+    glUniform3fv(LightPosId, 1, glm::value_ptr(globalFlamePos));
+    glUniform3f(LightColorId, 0.9f, 0.9f, 0.9f);
+
+    // ==========================================================
+    // 1. DESENHAR O MUNDO REAL
+    // ==========================================================
+
+    // Destrancar o Stencil ANTES de limpar!
+    glStencilMask(0xFF);
+
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_STENCIL_TEST);
+
+    // [BOA PRÁTICA] Ligar o Culling para o mundo normal (esconde as costas dos objetos)
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK); // Esconder a parte de trás (normal)
+
+    if (root) root->draw();
+
+    // ==========================================================
+    // 2. MÁSCARA STENCIL
+    // ==========================================================
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF); // Permitir escrita
+
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glDepthMask(GL_FALSE);
+
+    if (mirrorNode && pedestalNode) {
+        mirrorNode->draw(pedestalNode->getTransform(), Shaders);
+    }
+
+    // ==========================================================
+    // 3. REFLEXO (Só a Espada)
+    // ==========================================================
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+    glStencilMask(0x00); // Trancar Stencil
+
+    glDisable(GL_DEPTH_TEST);
+
+    // Matriz de Reflexão
+    float mirrorHeight = pedestalNode->getTransform()[3].y + 4.66f;
+    glm::mat4 reflection = glm::mat4(1.0f);
+    reflection = glm::translate(reflection, glm::vec3(0, mirrorHeight, 0));
+    reflection = glm::scale(reflection, glm::vec3(1, -1, 1));
+    reflection = glm::translate(reflection, glm::vec3(0, -mirrorHeight, 0));
+
+    // [CORREÇÃO CRUCIAL AQUI]
+    // 1. Garantir que o Culling está ATIVO.
+    glEnable(GL_CULL_FACE);
+    // 2. Dizer para esconder a "FRENTE" (porque a frente agora é o interior, devido à escala -1)
+    glCullFace(GL_FRONT);
+
+    // Desenhar SÓ a espada refletida
+    if (woodenSwordNode && pedestalNode) {
+        glm::mat4 reflectedPedestalGroup = reflection * pedestalNode->getTransform();
+        woodenSwordNode->draw(reflectedPedestalGroup, Shaders);
+    }
+
+    // [REPOR ESTADO NORMAL]
+    glCullFace(GL_BACK);      // Voltar a esconder a parte de trás normal
+    // Se quiseres podes fazer glDisable(GL_CULL_FACE) aqui, mas é boa prática deixar ligado.
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_STENCIL_TEST);
+
+    // ==========================================================
+    // 4. SUPERFÍCIE VIDRO
+    // ==========================================================
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    if (mirrorNode && pedestalNode) {
+        mirrorNode->draw(pedestalNode->getTransform(), Shaders);
+    }
+
+    glDisable(GL_BLEND);
+}
+
+/////////////////////////////////////////////////////////////////////////// Auxiliary Methods
+
+void MyApp::updateCamera() {
+    glm::vec3 initialPos(0.0f, 0.0f, activeCam->radius);
+    glm::vec3 rotatedPos = activeCam->rotation * initialPos;
+    glm::vec3 localUp = activeCam->rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::mat4 view = glm::lookAt(rotatedPos + target, target, glm::normalize(localUp));
+    activeCam->viewMatrix = view;
+
+    Camera->setViewMatrix(activeCam->viewMatrix);
+}
+
+void MyApp::calculateProjection(CameraInfo& cam, int width, int height) {
+    float aspect = (float)width / (float)height;
+    if (height == 0) aspect = 1.0f;
+
+    if (cam.isOrtho) {
+        float orthoSize = 2.0f;
+        cam.projectionMatrix = glm::ortho(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, 1.0f, 50.0f);
+    }
+    else {
+        cam.projectionMatrix = glm::perspective(glm::radians(30.0f), aspect, 1.0f, 50.0f);
+    }
+}
+
+// Devolve: 0 (Nada), 1 (Vela), 2 (Pedestal)
+// Devolve: 0 (Nada), 1 (Vela), 2 (Pedestal)
+int MyApp::pickObject(GLFWwindow* win, double mouseX, double mouseY) {
+    // 1. Limpar Buffers (incluindo o Stencil!)
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    // 2. Ativar Stencil e Configurar
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    // Precisamos do shader ativo
+    Shaders->bind();
+
+    // IMPORTANTE: Se o shader precisar da ViewMatrix atualizada, 
+    // garante que a câmara enviou os dados (normalmente o updateCamera trata disso).
+
+    // --- DESENHAR VELA (ID 1) ---
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+    if (candleNode) candleNode->draw();
+
+    // --- DESENHAR PEDESTAL (ID 2) ---
+    glStencilFunc(GL_ALWAYS, 2, 0xFF);
+    if (pedestalNode) pedestalNode->draw();
+
+    // 3. Ler o ID no pixel do rato
+    int width, height;
+    glfwGetWindowSize(win, &width, &height); // Usa o 'win' que recebemos
+
+    int x = (int)mouseX;
+    int y = height - (int)mouseY; // Inverter Y
+
+    unsigned int index = 0;
+    glReadPixels(x, y, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
+
+    // 4. Limpar
+    glDisable(GL_STENCIL_TEST);
+
+    return index;
+}
+
+
+
+
 ////////////////////////////////////////////////////////////////////// CALLBACKS
 
 void MyApp::initCallback(GLFWwindow* win) {
+    srand((unsigned int)time(NULL));
+
     createMeshes();
     createShaderPrograms();
     createCamera();
-    texMadeiraID = createWoodTexture(100);    // Gera fibras
-    texMarmoreID = createMarbleTexture(200);  // Gera nuvens
-    texVelaID = createCandleTexture(300);  // Gera grão fino
+
     createSceneGraph();
 }
 

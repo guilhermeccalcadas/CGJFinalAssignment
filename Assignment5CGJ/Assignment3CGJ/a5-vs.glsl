@@ -1,17 +1,16 @@
 #version 330 core
 
-// Inputs que vêm do C++
+
 in vec3 inPosition;
 in vec3 inNormal;
 in vec2 inTexcoord;
 
-// Outputs para o Fragment Shader
-out vec3 exPosition;      // Posição no Mundo (para a LUZ)
-out vec3 exLocalPosition; // <--- NOVO: Posição Local (para a TEXTURA/NOISE)
+
+out vec3 exPosition;
+out vec3 exLocalPosition;
 out vec3 exNormal;
 out vec2 exTexcoord;
 
-// Uniforms
 uniform mat4 ModelMatrix;
 
 layout(std140) uniform Camera {

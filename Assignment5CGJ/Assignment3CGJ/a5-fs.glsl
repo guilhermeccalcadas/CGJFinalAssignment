@@ -1,24 +1,22 @@
 #version 330 core
 
-in vec3 exPosition;      // Usado para LUZ (Mundo)
-in vec3 exLocalPosition; // Usado para TEXTURA (Local - Colado ao objeto)
+in vec3 exPosition;
+in vec3 exLocalPosition;
 in vec3 exNormal;
 
 out vec4 FragmentColor;
 
-// Uniforms
+
 uniform vec3 uLightPos;
 uniform vec3 uLightColor;
 uniform vec3 uViewPos;
-
-// [CORREÇÃO] vec4 para aceitar RGB + Alpha (Transparência)
 uniform vec4 uColor;             
 uniform int uMaterialType;       
 uniform sampler2D uNoiseTexture; 
 
 void main(void)
 {
-    // Usamos apenas RGB para os cálculos de cor base
+
     vec3 finalAlbedo = uColor.rgb; 
     float shininess = 32.0;
 
@@ -27,11 +25,8 @@ void main(void)
         vec3 woodLight = uColor.rgb;       
         vec3 woodDark  = uColor.rgb * 0.4; 
         
-        // [CORREÇÃO] Usamos exLocalPosition! 
-        // A textura agora usa as coordenadas do próprio objeto, não as da sala.
         float noise = texture(uNoiseTexture, exLocalPosition.xz * 0.5).r;
         
-        // Riscas verticais baseadas no X local
         float dist = exLocalPosition.x * 10.0 + noise * 1.5;
         
         float pattern = sin(dist);
@@ -46,7 +41,6 @@ void main(void)
         vec3 marbleBase = vec3(0.98, 0.98, 0.98); 
         vec3 veinColor  = uColor.rgb;      
 
-        // [CORREÇÃO] Triplanar com coordenadas Locais
         float nX = texture(uNoiseTexture, exLocalPosition.yz * 0.2).r;
         float nY = texture(uNoiseTexture, exLocalPosition.xz * 0.2).r; 
         float nZ = texture(uNoiseTexture, exLocalPosition.xy * 0.2).r;
@@ -70,8 +64,7 @@ void main(void)
         shininess = 20.0;
     }
 
-    // --- CÁLCULO DA LUZ (Blinn-Phong) ---
-    // IMPORTANTE: A luz continua a usar exPosition (Mundo)
+
     float ambientStrength = 0.4;
     float specularStrength = 0.5;
 
@@ -87,9 +80,9 @@ void main(void)
     float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess);
     vec3 specular = specularStrength * spec * vec3(1.0); 
 
-    // Resultado final
+
     vec3 result = (ambient + diffuse) * finalAlbedo + specular;
     
-    // Usamos o Alpha original para permitir transparência no espelho
+
     FragmentColor = vec4(result, uColor.a);
 }
