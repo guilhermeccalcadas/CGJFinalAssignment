@@ -31,6 +31,5 @@ void SceneObject::draw() {
     GLint locTex = glGetUniformLocation(programID, "uNoiseTexture");
     if (locTex != -1) glUniform1i(locTex, 0);
 
-    // 5. Desenhar a malha
     mesh_->draw();
 }

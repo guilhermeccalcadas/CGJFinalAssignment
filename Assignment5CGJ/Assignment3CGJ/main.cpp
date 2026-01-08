@@ -33,6 +33,10 @@ private:
     const float zoomSpeed = 1.0f;
     const float minRadius = 2.0f;
     const float maxRadius = 50.0f;
+
+    const float zNear = 0.1f;
+    const float zFar = 200.0f;
+    const float fovY = 45.0f;
     struct CameraInfo {
         glm::mat4 viewMatrix;
         glm::mat4 projectionMatrix;
@@ -82,6 +86,10 @@ private:
     mgl::SceneNode* mirrorNode = nullptr;
     std::vector<mgl::SceneNode*> nodes;
 
+    //Stencil Object ID's
+	int candleId = 1;
+	int pedestalId = 2;
+
     // Modos de Edição
     enum OpMode { NONE, TRANSLATE, ROTATE, SCALE };
     enum Axis { AXIS_X, AXIS_Y, AXIS_Z };
@@ -101,7 +109,7 @@ private:
     void drawScene();
     void updateCamera();
     void createSceneGraph();
-    static void calculateProjection(CameraInfo& cam, int width, int height);
+    void calculateProjection(CameraInfo& cam, int width, int height);
     int pickObject(GLFWwindow* win, double mouseX, double mouseY);
 };
 
@@ -382,8 +390,14 @@ void MyApp::drawScene() {
     glDisable(GL_DEPTH_TEST);
 
     // Matriz de Reflexão
-    float mirrorHeight = pedestalNode->getTransform()[3].y + 4.66f;
+    glm::vec4 mirrorLocalPos = glm::vec4(0.0f, 4.66f, 0.0f, 1.0f);
+    glm::vec4 mirrorWorldPos = pedestalNode->getTransform() * mirrorLocalPos;
+
+    float mirrorHeight = mirrorWorldPos.y;
+    // ---------------------
+
     glm::mat4 reflection = glm::mat4(1.0f);
+
     reflection = glm::translate(reflection, glm::vec3(0, mirrorHeight, 0));
     reflection = glm::scale(reflection, glm::vec3(1, -1, 1));
     reflection = glm::translate(reflection, glm::vec3(0, -mirrorHeight, 0));
@@ -437,11 +451,16 @@ void MyApp::calculateProjection(CameraInfo& cam, int width, int height) {
     if (height == 0) aspect = 1.0f;
 
     if (cam.isOrtho) {
-        float orthoSize = 2.0f;
-        cam.projectionMatrix = glm::ortho(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, 1.0f, 50.0f);
+        float orthoSize = 5.0f; // Podes também promover isto a variável global se quiseres
+        
+        // Usa zNear e zFar aqui
+        cam.projectionMatrix = glm::ortho(-orthoSize * aspect, orthoSize * aspect, 
+                                          -orthoSize, orthoSize, 
+                                          zNear, zFar);
     }
     else {
-        cam.projectionMatrix = glm::perspective(glm::radians(30.0f), aspect, 1.0f, 50.0f);
+        // Usa fovY, zNear e zFar aqui
+        cam.projectionMatrix = glm::perspective(glm::radians(fovY), aspect, zNear, zFar);
     }
 }
 
@@ -463,12 +482,12 @@ int MyApp::pickObject(GLFWwindow* win, double mouseX, double mouseY) {
     // garante que a câmara enviou os dados (normalmente o updateCamera trata disso).
 
     // --- DESENHAR VELA (ID 1) ---
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilFunc(GL_ALWAYS, candleId, 0xFF);
     glStencilMask(0xFF);
     if (candleNode) candleNode->draw();
 
     // --- DESENHAR PEDESTAL (ID 2) ---
-    glStencilFunc(GL_ALWAYS, 2, 0xFF);
+    glStencilFunc(GL_ALWAYS, pedestalId, 0xFF);
     if (pedestalNode) pedestalNode->draw();
 
     // 3. Ler o ID no pixel do rato
@@ -486,9 +505,6 @@ int MyApp::pickObject(GLFWwindow* win, double mouseX, double mouseY) {
 
     return index;
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////// CALLBACKS
 
@@ -516,21 +532,45 @@ void MyApp::displayCallback(GLFWwindow* win, double elapsed) {
 
 void MyApp::keyCallback(GLFWwindow* win, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS) {
-        if (key == GLFW_KEY_G) { currentMode = TRANSLATE; std::cout << ">> Mode: TRANSLATE" << std::endl; }
-        if (key == GLFW_KEY_R) { currentMode = ROTATE;    std::cout << ">> Mode: ROTATE" << std::endl; }
-        if (key == GLFW_KEY_S) { currentMode = SCALE;     std::cout << ">> Mode: SCALE" << std::endl; }
 
-        // --- SELECIONAR EIXO ---
-        if (key == GLFW_KEY_X) { currentAxis = AXIS_X; std::cout << ">> Axis: X" << std::endl; }
-        if (key == GLFW_KEY_Y) { currentAxis = AXIS_Y; std::cout << ">> Axis: Y" << std::endl; }
-        if (key == GLFW_KEY_Z) { currentAxis = AXIS_Z; std::cout << ">> Axis: Z" << std::endl; }
+		//Select Mode
+        if (key == GLFW_KEY_T) { 
+            currentMode = TRANSLATE;
+            //std::cout << ">> Mode: TRANSLATE" << std::endl; 
+        }
 
-        // Reset (ESC)
+        if (key == GLFW_KEY_R) { 
+            currentMode = ROTATE;
+            //std::cout << ">> Mode: ROTATE" << std::endl; 
+        }
+
+        if (key == GLFW_KEY_S) { 
+            currentMode = SCALE;
+            //std::cout << ">> Mode: SCALE" << std::endl; 
+        }
+
+        //Select Axis
+        if (key == GLFW_KEY_X) { 
+            currentAxis = AXIS_X; 
+            //std::cout << ">> Axis: X" << std::endl; 
+        }
+
+        if (key == GLFW_KEY_Y) { 
+            currentAxis = AXIS_Y; 
+            //std::cout << ">> Axis: Y" << std::endl; 
+        }
+
+        if (key == GLFW_KEY_Z) { 
+            currentAxis = AXIS_Z; 
+            //std::cout << ">> Axis: Z" << std::endl; 
+        }
+
         if (key == GLFW_KEY_ESCAPE) {
             currentMode = NONE;
             selectedNode = nullptr;
-            std::cout << ">> Mode: NONE (Deselected)" << std::endl;
+            //std::cout << ">> Mode: NONE (Deselected)" << std::endl;
         }
+
         switch (key) {
         case GLFW_KEY_P:
             activeCam->isOrtho = !activeCam->isOrtho;
@@ -574,21 +614,15 @@ void MyApp::mouseButtonCallback(GLFWwindow* win, int button, int action, int mod
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
-
-            leftMousePressed = true; // [NOVO] Faltava isto!
-
+            leftMousePressed = true;
             double x, y;
             glfwGetCursorPos(win, &x, &y);
-
-            // 1. Fazer o Picking
             int id = pickObject(win, x, y);
-
-            // 2. Atualizar quem está selecionado
-            if (id == 1) {
+            if (id == candleId) {
                 selectedNode = candleNode;
                 std::cout << "Selecionado: VELA" << std::endl;
             }
-            else if (id == 2) {
+            else if (id == pedestalId) {
                 selectedNode = pedestalNode;
                 std::cout << "Selecionado: PEDESTAL" << std::endl;
             }
@@ -596,33 +630,27 @@ void MyApp::mouseButtonCallback(GLFWwindow* win, int button, int action, int mod
                 selectedNode = nullptr;
                 std::cout << "Selecionado: NADA" << std::endl;
             }
-
-            // Iniciar arrasto
             isDragging = true;
             lastMouseX = x;
             lastMouseY = y;
         }
         else if (action == GLFW_RELEASE) {
             isDragging = false;
-            leftMousePressed = false; // [NOVO] Faltava isto!
+            leftMousePressed = false;
         }
     }
 }
 
 void MyApp::cursorCallback(GLFWwindow* window, double xpos, double ypos) {
-    // 1. Se nenhum botão estiver pressionado, apenas atualiza a posição e sai
     if (!rightMousePressed && !leftMousePressed) {
         lastCameraPosX = xpos;
         lastCameraPosY = ypos;
         return;
     }
-
-    // 2. Calcular quanto o rato mexeu desde o último frame
     double distanceX = xpos - lastCameraPosX;
     double distanceY = ypos - lastCameraPosY;
 
-    // --- BLOCO DA CÂMARA (TEU CÓDIGO ANTIGO) ---
-    // Funciona quando carregas no botão DIREITO
+    //Rotate camera
     if (rightMousePressed) {
         float yawAngle = -distanceX * rotationSpeed;
         float pitchAngle = -distanceY * rotationSpeed;
@@ -638,29 +666,20 @@ void MyApp::cursorCallback(GLFWwindow* window, double xpos, double ypos) {
         updateCamera();
     }
 
-    // --- BLOCO DE MANIPULAÇÃO DE OBJETOS ---
+	//Move/Rotate/Scale object
     if (leftMousePressed && selectedNode != nullptr && currentMode != NONE) {
 
-        float sensitivity = 0.0115f; // Ajusta a gosto
+        float sensitivity = 0.0115f;
 
-        // 1. Definir o vetor do Eixo no Mundo (Global)
         glm::vec3 axisVector(0.0f);
         if (currentAxis == AXIS_X) axisVector.x = 1.0f;
         if (currentAxis == AXIS_Y) axisVector.y = 1.0f;
         if (currentAxis == AXIS_Z) axisVector.z = 1.0f;
 
-        // 2. CORREÇÃO DA ROTAÇÃO (O "Truque" do Blender)
-        // Transformamos o eixo do Mundo para o espaço da Câmara (View Space)
-        // O glm::vec4(axisVector, 0.0f) garante que só rodamos a direção (ignoramos translação)
         glm::vec3 axisInView = glm::vec3(activeCam->viewMatrix * glm::vec4(axisVector, 0.0f));
 
-        // Agora axisInView.x diz-nos se o eixo aponta para a direita ou esquerda do ecrã
-        // e axisInView.y diz-nos se aponta para cima ou baixo.
-
-        // 3. Projetar o movimento do rato nesse eixo visual
-        // Basicamente: "Quanto do meu movimento de rato coincide com a direção visual deste eixo?"
         float screenMoveX = (float)distanceX;
-        float screenMoveY = -(float)distanceY; // Inverter Y do rato (baixo é positivo em pixel, mas negativo em 3D)
+        float screenMoveY = -(float)distanceY;
 
         // Produto Interno (Dot Product) 2D
         float alignment = (screenMoveX * axisInView.x) + (screenMoveY * axisInView.y);
@@ -674,7 +693,6 @@ void MyApp::cursorCallback(GLFWwindow* window, double xpos, double ypos) {
 
         float value = alignment * sensitivity;
 
-        // 4. Aplicar a Transformação
         if (currentMode == TRANSLATE) {
             selectedNode->transform = glm::translate(selectedNode->transform, axisVector * value);
         }
@@ -687,7 +705,6 @@ void MyApp::cursorCallback(GLFWwindow* window, double xpos, double ypos) {
         }
     }
 
-    // 3. Atualizar a última posição para o próximo frame
     lastCameraPosX = xpos;
     lastCameraPosY = ypos;
 }
