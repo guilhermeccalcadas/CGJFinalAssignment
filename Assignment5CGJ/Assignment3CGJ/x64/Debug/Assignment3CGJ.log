@@ -1,6 +1,9 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(538,5): warning MSB8028: O diretório intermediário (x64\Debug\) contém arquivos compartilhados de outro projeto (Assignment3CGJ.vcxproj). Isso pode levar a um comportamento incorreto de limpeza e recompilação.
+  mglSceneNode.cpp
+  SceneObject.cpp
   main.cpp
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(588,38): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(648,24): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(649,26): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
+D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(571,38): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
+D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(631,24): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
+D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp(632,26): warning C4244: 'inicializando': conversão de 'double' para 'float', possível perda de dados
+  Gerando Código...
   Assignment3CGJ.vcxproj -> D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\x64\Debug\Assignment5.exe

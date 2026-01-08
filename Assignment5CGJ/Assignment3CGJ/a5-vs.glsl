@@ -10,6 +10,7 @@ out vec3 exPosition;
 out vec3 exLocalPosition;
 out vec3 exNormal;
 out vec2 exTexcoord;
+out vec3 exLocalNormal;
 
 uniform mat4 ModelMatrix;
 
@@ -28,6 +29,6 @@ void main(void)
     exNormal = NormalMatrix * inNormal;
 
     exTexcoord = inTexcoord;
-
+    exLocalNormal = inNormal;
     gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(inPosition, 1.0);
 }

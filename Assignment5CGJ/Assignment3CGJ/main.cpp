@@ -94,9 +94,9 @@ private:
     enum OpMode { NONE, TRANSLATE, ROTATE, SCALE };
     enum Axis { AXIS_X, AXIS_Y, AXIS_Z };
 
-    OpMode currentMode = NONE;      // Começa sem fazer nada
-    Axis currentAxis = AXIS_X;      // Eixo default
-    mgl::SceneNode* selectedNode = nullptr; // Quem está selecionado?
+    OpMode currentMode = NONE;
+    Axis currentAxis = AXIS_X;
+    mgl::SceneNode* selectedNode = nullptr;
 
     // Rato
     bool isDragging = false;
@@ -113,10 +113,10 @@ private:
     void createSceneGraph();
     void calculateProjection(CameraInfo& cam, int width, int height);
     int pickObject(GLFWwindow* win, double mouseX, double mouseY);
-    void updateUniforms();       // Envia Matrizes e Luzes
-    void drawSolids();           // Passo 1: Mundo Real
-    void drawMirrorMask();       // Passo 2: Stencil (Buraco)
-    void drawReflection();       // Passo 3: O Mundo Invertido
+    void updateUniforms();
+    void drawSolids();
+    void drawMirrorMask();
+    void drawReflection();
     void drawMirrorSurface();
 };
 
@@ -297,18 +297,12 @@ void MyApp::createSceneGraph() {
     candleNode->setTransform(glm::mat4(1.0f));
     root->addChild(candleNode);
 
-// --- 4. ESPELHO ---
-    // Alpha 0.3 para ser transparente
+    // --- 4. ESPELHO ---
     SceneObject* mirror = new SceneObject(mirrorMesh, glm::vec4(0.5f, 0.5f, 0.6f, 0.3f), 0, 0); 
     mirrorNode = new mgl::SceneNode(mirror, Shaders);
-    
-    // [CORREÇÃO] Usar mat4(1.0f) limpa, não usar 'm'!
-    // Altura 2.05 para ficar no topo do pedestal
     glm::mat4 mirrorTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.66f, 0.0f)); 
     mirrorNode->setTransform(mirrorTransform);
     
-    // NÃO ADICIONAR À ROOT! (Isto está correto, mantém comentado)
-    // root->addChild(mirrorNode);
 }
 
 ///////////////////////////////////////////////////////////////////////// CAMERA
@@ -397,37 +391,26 @@ void MyApp::drawMirrorMask() {
 }
 
 void MyApp::drawReflection() {
-    // ... (Configurações de Cor, Depth e Stencil iguais ao que tens) ...
+
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDepthMask(GL_TRUE);
     glStencilFunc(GL_EQUAL, 1, 0xFF);
     glStencilMask(0x00);
     glDisable(GL_DEPTH_TEST);
 
-    // --- CORREÇÃO AQUI ---
-
-    // 1. Definir o Reflexo LOCAL (Relativo ao centro do pedestal)
-    // Não uses a posição do pedestal aqui! Usa apenas a altura fixa do espelho (4.66).
     glm::mat4 localReflection = glm::mat4(1.0f);
     localReflection = glm::translate(localReflection, glm::vec3(0, 4.66f, 0));
-    localReflection = glm::scale(localReflection, glm::vec3(1, -1, 1)); // Inverter Y Local
+    localReflection = glm::scale(localReflection, glm::vec3(1, -1, 1));
     localReflection = glm::translate(localReflection, glm::vec3(0, -4.66f, 0));
 
-    // 2. Inverter Culling (Triângulos do avesso)
     glCullFace(GL_FRONT);
 
-    // 3. Desenhar a Espada
     if (woodenSwordNode && pedestalNode) {
-        // [A MUDANÇA MÁGICA]
-        // Antigamente: reflection * pedestalNode->getTransform()
-        // Agora:       pedestalNode->getTransform() * localReflection
-        // Significado: "Pega na posição do pedestal E APLICA o reflexo lá dentro"
         glm::mat4 reflectedParentMatrix = pedestalNode->getTransform() * localReflection;
 
         woodenSwordNode->draw(reflectedParentMatrix, Shaders);
     }
 
-    // ... (Restaurar Culling e Depth iguais ao que tens) ...
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
 }
@@ -674,13 +657,9 @@ void MyApp::cursorCallback(GLFWwindow* window, double xpos, double ypos) {
         float screenMoveX = (float)distanceX;
         float screenMoveY = -(float)distanceY;
 
-        // Produto Interno (Dot Product) 2D
         float alignment = (screenMoveX * axisInView.x) + (screenMoveY * axisInView.y);
 
-        // Se o eixo estiver "de ponta" para nós (Z), usamos o movimento Y do rato como fallback
-        // para parecer zoom in/out intuitivo
         if (glm::abs(axisInView.z) > 0.7f && currentAxis == AXIS_Z) {
-            // Caso especial para eixo Z quando olhamos de frente
             alignment = screenMoveY * ((axisInView.z > 0) ? -1.0f : 1.0f);
         }
 

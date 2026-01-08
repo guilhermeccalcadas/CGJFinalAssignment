@@ -3,7 +3,7 @@
 in vec3 exPosition;
 in vec3 exLocalPosition;
 in vec3 exNormal;
-
+in vec3 exLocalNormal;
 out vec4 FragmentColor;
 
 
@@ -14,10 +14,12 @@ uniform vec4 uColor;
 uniform int uMaterialType;       
 uniform sampler2D uNoiseTexture; 
 
+
+
 void main(void)
 {
 
-    vec3 finalAlbedo = uColor.rgb; 
+    vec3 finalColor = uColor.rgb; 
     float shininess = 32.0;
 
     // --- 1. MADEIRA ---
@@ -32,27 +34,32 @@ void main(void)
         float pattern = sin(dist);
         pattern = (pattern + 1.0) * 0.5;
         
-        finalAlbedo = mix(woodDark, woodLight, pattern);
+        finalColor = mix(woodDark, woodLight, pattern);
         shininess = 16.0; 
     }
 
     // --- 2. MÁRMORE ---
     else if (uMaterialType == 2) {
         vec3 marbleBase = vec3(0.98, 0.98, 0.98); 
-        vec3 veinColor  = uColor.rgb;      
+        vec3 veinColor  = uColor.rgb;       
 
         float nX = texture(uNoiseTexture, exLocalPosition.yz * 0.2).r;
         float nY = texture(uNoiseTexture, exLocalPosition.xz * 0.2).r; 
         float nZ = texture(uNoiseTexture, exLocalPosition.xy * 0.2).r;
         
-        vec3 blend = abs(normalize(exNormal));
+        vec3 blend = abs(normalize(exLocalNormal)); 
+        
+        // (Otimização opcional: adicionar um pequeno bias para o blend ser mais nítido)
+        // blend = pow(blend, vec3(4.0)); 
+
         blend /= (blend.x + blend.y + blend.z);
+        
         float noise = nX * blend.x + nY * blend.y + nZ * blend.z;
         
         float veins = 1.0 - abs(noise - 0.5) * 2.0;
         veins = pow(veins, 20.0); 
 
-        finalAlbedo = mix(marbleBase, veinColor, veins);
+        finalColor = mix(marbleBase, veinColor, veins);
         shininess = 128.0; 
     }
 
@@ -60,7 +67,7 @@ void main(void)
     else if (uMaterialType == 3) {
         // [CORREÇÃO] Noise local
         float noise = texture(uNoiseTexture, exLocalPosition.xy * 2.0).r;
-        finalAlbedo = uColor.rgb * (0.9 + 0.1 * noise); 
+        finalColor = uColor.rgb * (0.9 + 0.1 * noise); 
         shininess = 20.0;
     }
 
@@ -81,7 +88,7 @@ void main(void)
     vec3 specular = specularStrength * spec * vec3(1.0); 
 
 
-    vec3 result = (ambient + diffuse) * finalAlbedo + specular;
+    vec3 result = (ambient + diffuse) * finalColor + specular;
     
 
     FragmentColor = vec4(result, uColor.a);
