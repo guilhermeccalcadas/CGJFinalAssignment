@@ -74,6 +74,7 @@ private:
     mgl::Mesh* pedestalMesh = nullptr;
 	mgl::Mesh* mirrorMesh = nullptr;
 
+	// Textures
     GLuint texMadeiraID;
     GLuint texMarmoreID;
     GLuint texVelaID;
@@ -171,8 +172,9 @@ void MyApp::createShaderPrograms() {
     LightColorId = Shaders->Uniforms["uLightColor"].index;
 }
 
-// 1. GERADOR DE MADEIRA (Gera riscas/fibras verticais)
-GLuint createWoodTexture(int seed) {
+///////////////////////////////////////////////////////////////////////// TEXTURES
+
+static GLuint createWoodTexture(int seed) {
     srand(seed);
     const int WIDTH = 128;
     const int HEIGHT = 128;
@@ -180,19 +182,11 @@ GLuint createWoodTexture(int seed) {
 
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
-            // Truque: O valor muda muito no X (largura), mas pouco no Y (altura)
-            // Isso cria o efeito de "fibras" longas
-            float scaleX = 0.5f;
-            float scaleY = 0.05f; // Esticado verticalmente
 
-            // Simulação simples de perlin noise no CPU
             int noiseVal = rand() % 255;
 
-            // Mas vamos aldrabar: riscas verticais misturadas com noise
-            // (x * 10) cria o padrão de repetição de tábuas
             int stripPattern = (int)(abs(sin(x * 0.2f)) * 255);
 
-            // Mistura o padrão de riscas com o ruído
             unsigned char finalVal = (unsigned char)((stripPattern * 0.7) + (noiseVal * 0.3));
 
             data[(y * WIDTH + x) * 4 + 0] = finalVal;
@@ -214,10 +208,10 @@ GLuint createWoodTexture(int seed) {
     return texID;
 }
 
-// 2. GERADOR DE MÁRMORE (Nuvens suaves, clássico)
-GLuint createMarbleTexture(int seed) {
+
+static GLuint createMarbleTexture(int seed) {
     srand(seed);
-    const int SIZE = 64; // Menor para ficar mais "borrado" (suave)
+    const int SIZE = 64;
     unsigned char data[SIZE * SIZE * 4];
 
     for (int i = 0; i < SIZE * SIZE; i++) {
@@ -232,7 +226,7 @@ GLuint createMarbleTexture(int seed) {
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_2D, texID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE, SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // OBRIGATÓRIO PARA MÁRMORE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -240,14 +234,13 @@ GLuint createMarbleTexture(int seed) {
     return texID;
 }
 
-// 3. GERADOR DE VELA (Grão muito fino)
-GLuint createCandleTexture(int seed) {
+static GLuint createCandleTexture(int seed) {
     srand(seed);
-    const int SIZE = 256; // Maior resolução para grão fino
+    const int SIZE = 256;
     unsigned char data[SIZE * SIZE * 4];
 
     for (int i = 0; i < SIZE * SIZE; i++) {
-        // Ruído subtil (entre 200 e 255) para não ter pontos pretos
+
         unsigned char val = 200 + (rand() % 55);
         data[i * 4 + 0] = val;
         data[i * 4 + 1] = val;
@@ -267,6 +260,7 @@ GLuint createCandleTexture(int seed) {
     return texID;
 }
 
+///////////////////////////////////////////////////////////////////////// SCENE GRAPH
 
 void MyApp::createSceneGraph() {
     texMadeiraID = createWoodTexture(rand());
@@ -275,14 +269,14 @@ void MyApp::createSceneGraph() {
 
     root = new mgl::SceneNode(nullptr, nullptr);
 
-    // --- 1. PEDESTAL (Mármore - ID 2) ---
+    //PEDESTAL
     SceneObject* pedestal = new SceneObject(pedestalMesh, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f), texMarmoreID, 2);
     pedestalNode = new mgl::SceneNode(pedestal, Shaders);
     pedestalNode->transform = glm::mat4(1.0f);
     pedestalNode->transform[3] = glm::vec4(5.0f, 0.0f, 0.0f, 1.0f);
     root->addChild(pedestalNode);
 
-    // --- 2. ESPADA (Madeira - ID 1) ---
+    //ESPADA
     SceneObject* woodenSword = new SceneObject(woodenSwordMesh, glm::vec4(0.60f, 0.35f, 0.15f, 1.0f), texMadeiraID, 1);
     woodenSwordNode = new mgl::SceneNode(woodenSword, Shaders);
     glm::mat4 m = glm::mat4(1.0f);
@@ -291,13 +285,13 @@ void MyApp::createSceneGraph() {
     woodenSwordNode->setTransform(m);
     pedestalNode->addChild(woodenSwordNode);
 
-    // --- 3. VELA (Cera - ID 3) ---
+    //VELA
     SceneObject* candle = new SceneObject(candleMesh, glm::vec4(0.92f, 0.88f, 0.70f, 1.0f), texVelaID, 3);
     candleNode = new mgl::SceneNode(candle, Shaders);
     candleNode->setTransform(glm::mat4(1.0f));
     root->addChild(candleNode);
 
-    // --- 4. ESPELHO ---
+    //ESPELHO
     SceneObject* mirror = new SceneObject(mirrorMesh, glm::vec4(0.5f, 0.5f, 0.6f, 0.3f), 0, 0); 
     mirrorNode = new mgl::SceneNode(mirror, Shaders);
     glm::mat4 mirrorTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 4.66f, 0.0f)); 
@@ -374,10 +368,9 @@ void MyApp::drawSolids() {
 }
 
 void MyApp::drawMirrorMask() {
+    Shaders->bind(); // [CORREÇÃO] Garantir que o shader está ativo!
 
     glEnable(GL_STENCIL_TEST);
-
-
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
@@ -391,12 +384,17 @@ void MyApp::drawMirrorMask() {
 }
 
 void MyApp::drawReflection() {
-
+    Shaders->bind();
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDepthMask(GL_TRUE);
     glStencilFunc(GL_EQUAL, 1, 0xFF);
     glStencilMask(0x00);
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+    if (Shaders->Uniforms.find("uIsReflection") != Shaders->Uniforms.end())
+         glUniform1i(Shaders->Uniforms["uIsReflection"].index, 1);
+
 
     glm::mat4 localReflection = glm::mat4(1.0f);
     localReflection = glm::translate(localReflection, glm::vec3(0, 4.66f, 0));
@@ -404,18 +402,26 @@ void MyApp::drawReflection() {
     localReflection = glm::translate(localReflection, glm::vec3(0, -4.66f, 0));
 
     glCullFace(GL_FRONT);
-
     if (woodenSwordNode && pedestalNode) {
-        glm::mat4 reflectedParentMatrix = pedestalNode->getTransform() * localReflection;
-
-        woodenSwordNode->draw(reflectedParentMatrix, Shaders);
+        glm::mat4 swordReflector = pedestalNode->getTransform() * localReflection;
+        woodenSwordNode->draw(swordReflector, Shaders);
     }
 
+    if (candleNode && pedestalNode) {
+        glm::mat4 worldReflector = pedestalNode->getTransform() 
+                                 * localReflection 
+                                 * glm::inverse(pedestalNode->getTransform());
+        candleNode->draw(worldReflector, Shaders);
+    }
+
+    if (Shaders->Uniforms.find("uIsReflection") != Shaders->Uniforms.end())
+        glUniform1i(Shaders->Uniforms["uIsReflection"].index, 0);
+
     glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
 }
 
 void MyApp::drawMirrorSurface() {
+    Shaders->bind();
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -427,7 +433,7 @@ void MyApp::drawMirrorSurface() {
     }
 
     glDisable(GL_BLEND);
-    glDisable(GL_STENCIL_TEST); 
+    glDisable(GL_STENCIL_TEST);
 }
 
 /////////////////////////////////////////////////////////////////////////// Auxiliary Methods
@@ -561,9 +567,6 @@ void MyApp::keyCallback(GLFWwindow* win, int key, int scancode, int action, int 
             break;
         }
     }
-
-
-
 }
 
 void MyApp::scrollCallback(GLFWwindow* win, double xoffset, double yoffset) {
@@ -687,7 +690,7 @@ int main(int argc, char* argv[]) {
     mgl::Engine& engine = mgl::Engine::getInstance();
     engine.setApp(new MyApp());
     engine.setOpenGL(4, 6);
-    engine.setWindow(800, 600, "Create Pickagram 3D", 0, 1);
+    engine.setWindow(800, 600, "Examine a Sword in 3D", 0, 1);
     engine.init();
     engine.run();
     exit(EXIT_SUCCESS);

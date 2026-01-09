@@ -4,6 +4,7 @@ in vec3 exPosition;
 in vec3 exLocalPosition;
 in vec3 exNormal;
 in vec3 exLocalNormal;
+
 out vec4 FragmentColor;
 
 
@@ -89,7 +90,6 @@ void main(void)
 
 
     vec3 result = (ambient + diffuse) * finalColor + specular;
-    
-
+   
     FragmentColor = vec4(result, uColor.a);
 }
