@@ -691,7 +691,7 @@ int main(int argc, char* argv[]) {
     mgl::Engine& engine = mgl::Engine::getInstance();
     engine.setApp(new MyApp());
     engine.setOpenGL(4, 6);
-    engine.setWindow(800, 600, "Examine a Sword in 3D", 0, 1);
+    engine.setWindow(800, 600, "Examine a Sword inside a Pedestal in 3D", 0, 1);
     engine.init();
     engine.run();
     exit(EXIT_SUCCESS);
