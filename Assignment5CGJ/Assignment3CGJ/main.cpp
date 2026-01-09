@@ -272,23 +272,24 @@ void MyApp::createSceneGraph() {
     //PEDESTAL
     SceneObject* pedestal = new SceneObject(pedestalMesh, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f), texMarmoreID, 2);
     pedestalNode = new mgl::SceneNode(pedestal, Shaders);
-    pedestalNode->transform = glm::mat4(1.0f);
-    pedestalNode->transform[3] = glm::vec4(5.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 m = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -5.0f, 0.0f));
+    pedestalNode->setTransform(m);
     root->addChild(pedestalNode);
 
     //ESPADA
     SceneObject* woodenSword = new SceneObject(woodenSwordMesh, glm::vec4(0.60f, 0.35f, 0.15f, 1.0f), texMadeiraID, 1);
     woodenSwordNode = new mgl::SceneNode(woodenSword, Shaders);
-    glm::mat4 m = glm::mat4(1.0f);
-    m = glm::translate(m, glm::vec3(0.0f, 10.0f, 0.0f));
-    m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    woodenSwordNode->setTransform(m);
+    glm::mat4 a = glm::mat4(1.0f);
+    a = glm::translate(a, glm::vec3(0.0f, 10.0f, 0.0f));
+    a = glm::rotate(a, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    woodenSwordNode->setTransform(a);
     pedestalNode->addChild(woodenSwordNode);
 
     //VELA
     SceneObject* candle = new SceneObject(candleMesh, glm::vec4(0.92f, 0.88f, 0.70f, 1.0f), texVelaID, 3);
     candleNode = new mgl::SceneNode(candle, Shaders);
-    candleNode->setTransform(glm::mat4(1.0f));
+    glm::mat4 b = glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, 2.0f, 0.0f));
+    candleNode->setTransform(b);
     root->addChild(candleNode);
 
     //ESPELHO
@@ -305,7 +306,7 @@ void MyApp::createSceneGraph() {
 void MyApp::createCamera() {
     Camera = new mgl::Camera(UBO_BP);
 
-    glm::vec3 eye1(0.0f, 10.0f, 0.0f);
+    glm::vec3 eye1(0.0f, 10.0f, 10.0f);
     glm::vec3 up1(0.0f, 0.0f, -1.0f);
 
     cam1.radius = glm::length(eye1 - target);
