@@ -1,8 +1,8 @@
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglApp.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglApp.obj
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglCamera.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglCamera.obj
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglError.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglError.obj
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglMesh.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglMesh.obj
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglSceneNode.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglSceneNode.obj
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglShader.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglShader.obj
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\main.obj
-D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\SceneObject.cpp;D:\IST\CGJ\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\SceneObject.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglApp.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglApp.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglCamera.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglCamera.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglError.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglError.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglMesh.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglMesh.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglSceneNode.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglSceneNode.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\libs\mgl\mglShader.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\mglShader.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\main.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\main.obj
+C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\SceneObject.cpp;C:\Users\gcalc\OneDrive\Documentos\GitHub\CGJFinalAssignment\Assignment5CGJ\Assignment3CGJ\x64\Debug\SceneObject.obj

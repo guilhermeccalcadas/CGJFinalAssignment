@@ -19,7 +19,6 @@ uniform sampler2D uNoiseTexture;
 
 void main(void)
 {
-
     vec3 finalColor = uColor.rgb; 
     float shininess = 32.0;
 
@@ -51,7 +50,7 @@ void main(void)
         vec3 blend = abs(normalize(exLocalNormal)); 
         
         // (Otimização opcional: adicionar um pequeno bias para o blend ser mais nítido)
-        // blend = pow(blend, vec3(4.0)); 
+        blend = pow(blend, vec3(4.0)); 
 
         blend /= (blend.x + blend.y + blend.z);
         

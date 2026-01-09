@@ -208,7 +208,6 @@ static GLuint createWoodTexture(int seed) {
     return texID;
 }
 
-
 static GLuint createMarbleTexture(int seed) {
     srand(seed);
     const int SIZE = 64;
@@ -369,7 +368,7 @@ void MyApp::drawSolids() {
 }
 
 void MyApp::drawMirrorMask() {
-    Shaders->bind(); // [CORREÇÃO] Garantir que o shader está ativo!
+    Shaders->bind();
 
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -393,8 +392,7 @@ void MyApp::drawReflection() {
     glEnable(GL_DEPTH_TEST);
 
     glClear(GL_DEPTH_BUFFER_BIT);
-    if (Shaders->Uniforms.find("uIsReflection") != Shaders->Uniforms.end())
-         glUniform1i(Shaders->Uniforms["uIsReflection"].index, 1);
+    glUniform1i(Shaders->Uniforms["uIsReflection"].index, 1);
 
 
     glm::mat4 localReflection = glm::mat4(1.0f);
@@ -414,9 +412,7 @@ void MyApp::drawReflection() {
                                  * glm::inverse(pedestalNode->getTransform());
         candleNode->draw(worldReflector, Shaders);
     }
-
-    if (Shaders->Uniforms.find("uIsReflection") != Shaders->Uniforms.end())
-        glUniform1i(Shaders->Uniforms["uIsReflection"].index, 0);
+    glUniform1i(Shaders->Uniforms["uIsReflection"].index, 0);
 
     glCullFace(GL_BACK);
 }
@@ -676,8 +672,13 @@ void MyApp::cursorCallback(GLFWwindow* window, double xpos, double ypos) {
             selectedNode->transform = glm::rotate(selectedNode->transform, value * 5.0f, axisVector);
         }
         else if (currentMode == SCALE) {
-            float scaleVal = 1.0f + (value * 0.5f);
-            selectedNode->transform = glm::scale(selectedNode->transform, glm::vec3(scaleVal));
+            float scaleIncrement = value * 0.5f;
+            glm::vec3 scaleFactors(1.0f, 1.0f, 1.0f);
+            scaleFactors += axisVector * scaleIncrement;
+            if (scaleFactors.x < 0.01f) scaleFactors.x = 0.01f;
+            if (scaleFactors.y < 0.01f) scaleFactors.y = 0.01f;
+            if (scaleFactors.z < 0.01f) scaleFactors.z = 0.01f;
+            selectedNode->transform = glm::scale(selectedNode->transform, scaleFactors);
         }
     }
 
