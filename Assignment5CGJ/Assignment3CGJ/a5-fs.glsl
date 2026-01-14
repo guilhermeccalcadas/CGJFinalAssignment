@@ -48,9 +48,6 @@ void main(void)
         float nZ = texture(uNoiseTexture, exLocalPosition.xy * 0.2).r;
         
         vec3 blend = abs(normalize(exLocalNormal)); 
-        
-        // (Otimização opcional: adicionar um pequeno bias para o blend ser mais nítido)
-        blend = pow(blend, vec3(4.0)); 
 
         blend /= (blend.x + blend.y + blend.z);
         
@@ -74,6 +71,9 @@ void main(void)
 
     float ambientStrength = 0.4;
     float specularStrength = 0.5;
+
+    //float distance = length(uLightPos - exPosition);
+    //float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * (distance * distance));
 
     vec3 ambient = ambientStrength * uLightColor;
 
